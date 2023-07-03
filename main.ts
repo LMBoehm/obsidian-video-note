@@ -8,25 +8,25 @@ import {
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
+import { NewFileLocation } from "./enums";
 
 function toLink(name, url) {
-    return `[${name}](${url})`;
+	return `[${name}](${url})`;
 }
 
 function getFrontMatter(tags) {
-    tag_str = ''
-    for (let k in tags) {
-        tag_str += `${k}: ${tags[k]}\n`
-    }
-    console.log(tag_str)
-    return '---\n' + tag_str + '---\n\n'
-
+	tag_str = "";
+	for (let k in tags) {
+		tag_str += `${k}: ${tags[k]}\n`;
+	}
+	console.log(tag_str);
+	return "---\n" + tag_str + "---\n\n";
 }
 
 async function getYouTubeInfo(video_url: string) {
 	var tags = {};
-	console.log(video_url)
-	let data = ""
+	console.log(video_url);
+	let data = "";
 	try {
 		data = await requestUrl({ url: `https://youtube.com/oembed?url=${video_url}` }).json;
 	} catch (error) {
@@ -47,20 +47,20 @@ async function getYouTubeInfo(video_url: string) {
 	// video link
 	const video_link = toLink(tags["title"], video_url);
 
-	const val_title = tags["title"].replace(":", "_");
+	const val_title = tags["title"].replaceAll(":", "_");
 
 	const tags_str = getFrontMatter(tags);
 	const title_str = `# [[${val_title}]]\n\n`;
 
-	const links = `## links\n\n${video_link}\n\n${channel_link}\n\n`;
+	const thumb_nail = `\`\`\`vid\n${video_url}\n\`\`\`\n\n`;
+	const links = `## links\n\n${channel_link}\n\n`;
+	const screenshots = `## screenshots\n\n`;
 
-	console.log(val_title);
-	return [val_title, tags_str + title_str + links];
+	// console.log(val_title);
+	return [val_title, tags_str + title_str + thumb_nail + links + screenshots];
 }
 
 export default class VideoNote extends Plugin {
-	// settings: VideoNoteSettings;
-
 	async onload() {
 		await this.loadSettings();
 
@@ -68,9 +68,8 @@ export default class VideoNote extends Plugin {
 			id: "create-new-video-note",
 			name: "create new video note from clipboard",
 			callback: async () => {
-				console.log("hello")
 				const clipText = await navigator.clipboard.readText();
-				console.log(`clipboard: ${clipText}`)
+				// console.log(`clipboard: ${clipText}`)
 				var [title, body] = await getYouTubeInfo(clipText);
 				if (Boolean(title) == false) {
 					return;
@@ -104,24 +103,9 @@ export default class VideoNote extends Plugin {
 				}
 			},
 		});
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, "click", (evt: MouseEvent) => {
-			console.log("click", evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log("setInterval"), 5 * 60 * 1000));
 	}
 
 	onunload() {}
-
-	async loadSettings() {
-		// this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		// await this.saveData(this.settings);
-	}
+	async loadSettings() {}
+	async saveSettings() {}
 }
